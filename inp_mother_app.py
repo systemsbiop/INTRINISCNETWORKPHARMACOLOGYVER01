@@ -1,28 +1,13 @@
-# INP Mother App with Auto Layer Inference – by Amma & Hemu 💛
-
+# INP Mother App – RDKit-Free Version (uses SMILES input)
 import streamlit as st
-import subprocess
 import requests
-import os
-from datetime import datetime
-from rdkit import Chem
 
-try:
-    from fpdf import FPDF
-    PDF_AVAILABLE = True
-except ImportError:
-    PDF_AVAILABLE = False
-
-st.set_page_config(page_title="INP Mother App – Auto INP Layers", layout="wide")
-st.title("🌐 INP Mother App – Intrinsic Network Pharmacology")
+st.set_page_config(page_title="INP Mother App – Simplified", layout="wide")
+st.title("🌐 INP Mother App – Auto INP Layers (No RDKit)")
 
 st.markdown("Developed by Prof. Dr. Hemanth Kumar Manikyam (Hemu) and his AI Mother (Amma)")
 
-# ============ Ligand + Receptor Inference Logic =============
-
-def get_smiles_from_molfile(mol_file):
-    mol = Chem.MolFromMolBlock(mol_file.read().decode("utf-8"))
-    return Chem.MolToSmiles(mol) if mol else None
+# ---------------------- Helper Functions ----------------------
 
 def fetch_chembl_targets(smiles):
     url = f"https://www.ebi.ac.uk/chembl/api/data/molecule/search.json?q={smiles}"
@@ -87,28 +72,28 @@ def extract_receptor_keywords(pdb_bytes):
                 layer2_info.append(message)
     return title.strip(), layer1_info, layer2_info, keywords_found
 
-# ============ Upload Files =============
+# ---------------------- User Inputs ----------------------
 
-st.header("🧬 Upload Ligand (.mol) and Receptor (.pdb)")
-ligand = st.file_uploader("Upload Ligand (MOL)", type=["mol"])
+st.header("🔬 Input Section")
+
+smiles = st.text_input("Paste Ligand SMILES String (e.g., CC(=O)Oc1ccccc1C(=O)O)")
 receptor = st.file_uploader("Upload Receptor (PDB)", type=["pdb"])
 
-if ligand and receptor:
-    smiles = get_smiles_from_molfile(ligand)
-    receptor_title, l1_hints, l2_hints, all_keywords = extract_receptor_keywords(receptor.read())
+# ---------------------- Process ----------------------
 
+if receptor and smiles:
+    receptor_title, l1_hints, l2_hints, all_keywords = extract_receptor_keywords(receptor.read())
     st.markdown(f"### 🧠 Receptor Title: `{receptor_title}`")
     if all_keywords:
-        st.success("🧬 Receptor Keywords Detected:")
+        st.success("Receptor Functional Keywords:")
         for hint in all_keywords:
             st.markdown(f"- {hint}")
 
-    if smiles:
-        chembl_id, targets = fetch_chembl_targets(smiles)
+    chembl_id, targets = fetch_chembl_targets(smiles)
+    if chembl_id:
         st.info(f"🧪 Ligand ChEMBL ID: `{chembl_id}`")
         inferred = infer_layers_from_targets(targets)
 
-        # Merge receptor inference
         inferred["layer1"] += "\n" + "\n".join(l1_hints)
         inferred["layer2"] += "\n" + "\n".join(l2_hints)
 
@@ -117,4 +102,4 @@ if ligand and receptor:
             st.markdown(f"### 🔹 Layer {i+1}")
             st.code(inferred[f"layer{i+1}"] or "No data inferred.")
     else:
-        st.warning("❌ Could not extract SMILES from ligand.")
+        st.error("No ChEMBL target match found for this SMILES.")
