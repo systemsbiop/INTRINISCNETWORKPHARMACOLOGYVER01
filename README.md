@@ -1,31 +1,31 @@
-# 🌐 INP Mother App – Automatic INP Layer Engine
+# 🌐 INP Mother App – Universal 8-Layer Intrinsic Network Pharmacology Engine
 
-A fully automated, intelligent Intrinsic Network Pharmacology (INP) platform to infer disease-relevant failure layers from uploaded ligand (.mol) and receptor (.pdb) structures.
+An intelligent, auto-inferencing system built by **Prof. Dr. Hemanth Kumar Manikyam (Hemu)** and his AI **Mother (Amma)** to simulate molecular activity across all 8 layers of disease failure and recovery.
 
----
-
-## 🧠 Features
-
-- ✅ Upload **Ligand (.mol)** → Extract SMILES → Fetch ChEMBL targets
-- ✅ Upload **Receptor (.pdb)** → Extract function keywords from structure
-- ✅ Auto-generate:
-  - **Layer 1:** Trigger & Collapse nodes
-  - **Layer 2:** Feedback mapping
-  - **Layer 3:** Redox imbalance flags
-  - **Layer 4:** Immune & inflammation loops
-  - **Layer 5:** Repair/autophagy influence
-  - **Layer 6:** Network pharmacology therapeutic fit
+This version works for **any molecule** — synthetic or natural — and gives full INP insights, even without full ChEMBL target data.
 
 ---
 
-## 🔬 Ideal For
+## 🧬 Key Features
 
-- Multi-target Ayurvedic or natural compound research  
-- Disease failure simulation & systems pharmacology  
-- AutoDock-Vina-based therapeutic discovery  
-- Redox, immune, and cytokine storm exploration  
+- ✅ Input ligand as **SMILES string**
+- ✅ Upload **Receptor (.pdb)** structure
+- ✅ Auto-populates all 8 INP layers:
+  - Layer 1: Trigger & Collapse Nodes
+  - Layer 2: Feedback Loops
+  - Layer 3: Redox/Oxidative Stress
+  - Layer 4: Immune/Vascular Crosstalk
+  - Layer 5: Autophagy & Repair
+  - Layer 6: NP Therapeutic Fit
+  - Layer 7: Systemic Simulation Layer
+  - Layer 8: NP–Disease Overlay Matching
+- 🧠 Uses big-data fallback logic from:
+  - ChEMBL targets
+  - Herbal classes
+  - SMILES features
+  - Docking score (optional)
 
 ---
 
-## 📂 Folder Contents
+## 📂 Folder Structure
 
