@@ -1,0 +1,9 @@
+
+---
+
+## ⚙️ Requirements
+
+### 🐍 Python (for local run)
+
+```bash
+pip install streamlit rdkit-pypi requests
