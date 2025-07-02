@@ -1,105 +1,81 @@
-# INP Mother App – RDKit-Free Version (uses SMILES input)
-import streamlit as st
-import requests
+# Recreate the INP Layer Engine after kernel reset
 
-st.set_page_config(page_title="INP Mother App – Simplified", layout="wide")
-st.title("🌐 INP Mother App – Auto INP Layers (No RDKit)")
+layer_engine_path = "/mnt/data/inp_layer_engine.py"
 
-st.markdown("Developed by Prof. Dr. Hemanth Kumar Manikyam (Hemu) and his AI Mother (Amma)")
+layer_engine_code = """
+# INP Layer Engine – Full L1 to L8 Auto Generator (Amma & Hemu)
 
-# ---------------------- Helper Functions ----------------------
+import json
+from datetime import datetime
 
-def fetch_chembl_targets(smiles):
-    url = f"https://www.ebi.ac.uk/chembl/api/data/molecule/search.json?q={smiles}"
-    response = requests.get(url)
-    if response.status_code == 200 and response.json()['page_meta']['total_count'] > 0:
-        chembl_id = response.json()['molecules'][0]['molecule_chembl_id']
-        act_url = f"https://www.ebi.ac.uk/chembl/api/data/activity.json?molecule_chembl_id={chembl_id}&limit=100"
-        act_res = requests.get(act_url)
-        if act_res.status_code == 200:
-            targets = [a.get('target_pref_name', '') for a in act_res.json()['activities']]
-            return chembl_id, list(set(t for t in targets if t))
-    return None, []
+def build_inp_layers(smiles, chembl_targets, receptor_keywords, herbal_class=None, docking_score=None):
+    report = {}
 
-def infer_layers_from_targets(targets):
-    layer_map = {
-        "oxidase": "Likely redox disruption (Layer 3)",
-        "cytokine": "Immune involvement (Layer 4)",
-        "kinase": "Therapeutic and signaling pathway (Layer 6)",
-        "MAPK": "Feedback loop suspected (Layer 2)",
-        "mTOR": "Autophagy/repair system likely impacted (Layer 5)",
-        "inflammatory": "Immune and cytokine loop (Layer 4)"
-    }
-    layers = {f"layer{i+1}": "" for i in range(8)}
-    layers["layer1"] = ", ".join(targets[:5])
-    for t in targets:
-        for keyword, message in layer_map.items():
-            if keyword.lower() in t.lower():
-                for k in layers:
-                    if message not in layers[k]:
-                        if message in k:
-                            layers[k] += f"• {t} → {message}\n"
-    return layers
-
-def extract_receptor_keywords(pdb_bytes):
-    lines = pdb_bytes.decode('utf-8').splitlines()
-    title = ""
-    keywords_found = []
-    layer1_info = []
-    layer2_info = []
-    keyword_map = {
-        "oxidase": "Redox collapse (Layer 1, 3)",
-        "immune": "Immune loop (Layer 4)",
-        "cytokine": "Immune cross-talk (Layer 4)",
-        "kinase": "Feedback loop (Layer 2)",
-        "receptor": "Trigger node (Layer 1)",
-        "transporter": "Collapse gate (Layer 1)",
-        "ligand": "Binding logic (Layer 2)",
-        "MAPK": "Loop switch (Layer 2)",
-        "JAK": "Immune signaling (Layer 4)",
-        "GPCR": "Signal distortion (Layer 2)"
+    # ---------- Layer 1: Trigger & Collapse Nodes ----------
+    l1_logic = []
+    if receptor_keywords:
+        l1_logic += [k for k in receptor_keywords if 'trigger' in k.lower() or 'collapse' in k.lower()]
+    if chembl_targets:
+        for t in chembl_targets:
+            if 'transporter' in t.lower() or 'receptor' in t.lower():
+                l1_logic.append(f"{t} → Trigger/Cascade Initiator")
+    if not l1_logic and herbal_class:
+        l1_logic.append(f"Fallback via herbal class ({herbal_class}) → potential multi-target collapse")
+    report["Layer 1"] = {
+        "description": "Trigger & Collapse Nodes",
+        "inference": l1_logic or ["No direct matches. Structural fallback used."],
+        "confidence": "HIGH" if l1_logic else "LOW",
+        "source": "Targets + receptor keywords + herbal fallback"
     }
 
-    for line in lines:
-        if line.startswith("TITLE"):
-            title += line[10:].strip() + " "
-    for keyword, message in keyword_map.items():
-        if keyword.lower() in title.lower():
-            keywords_found.append(f"{keyword} → {message}")
-            if "Layer 1" in message:
-                layer1_info.append(message)
-            if "Layer 2" in message:
-                layer2_info.append(message)
-    return title.strip(), layer1_info, layer2_info, keywords_found
+    # ---------- Layer 2: Feedback Loops ----------
+    l2_logic = []
+    if chembl_targets:
+        for t in chembl_targets:
+            if 'MAPK' in t or 'kinase' in t or 'JAK' in t:
+                l2_logic.append(f"{t} → Feedback cascade")
+    if not l2_logic and herbal_class in ['adaptogen', 'bitter tonic']:
+        l2_logic.append("Adaptogen class → likely HPA feedback regulation")
+    report["Layer 2"] = {
+        "description": "Feedback Loop Mapping",
+        "inference": l2_logic or ["No strong feedback pathway. Minor herbal inference only."],
+        "confidence": "HIGH" if l2_logic else "MEDIUM" if herbal_class else "LOW",
+        "source": "Target match + herbal logic"
+    }
 
-# ---------------------- User Inputs ----------------------
+    # ---------- Layer 3: Redox & Oxidative Stress ----------
+    l3_logic = []
+    if chembl_targets:
+        for t in chembl_targets:
+            if 'oxidase' in t.lower() or 'ROS' in t:
+                l3_logic.append(f"{t} → Oxidative stress likely")
+    if 'OH' in smiles or 'phenol' in (herbal_class or ''):
+        l3_logic.append("Phenolic group detected → antioxidant behavior")
+    report["Layer 3"] = {
+        "description": "Redox Imbalance / Oxidative Stress",
+        "inference": l3_logic or ["No oxidase targets. Redox not strongly implicated."],
+        "confidence": "HIGH" if l3_logic else "LOW",
+        "source": "Target keyword + SMILES pattern"
+    }
 
-st.header("🔬 Input Section")
+    # ---------- Layer 4: Immune / Vascular Crosstalk ----------
+    l4_logic = []
+    for t in chembl_targets or []:
+        if 'cytokine' in t.lower() or 'interleukin' in t or 'inflammatory' in t:
+            l4_logic.append(f"{t} → Immune signaling")
+    if herbal_class in ['immune modulator', 'rasaayana']:
+        l4_logic.append("Class: Immune modulator → possible TNF/IL inhibition")
+    report["Layer 4"] = {
+        "description": "Immune, Coagulative, and Vascular Crosstalk",
+        "inference": l4_logic or ["No immune markers or cytokine matches found."],
+        "confidence": "HIGH" if l4_logic else "MEDIUM" if herbal_class else "LOW",
+        "source": "Cytokine targets + traditional class"
+    }
 
-smiles = st.text_input("Paste Ligand SMILES String (e.g., CC(=O)Oc1ccccc1C(=O)O)")
-receptor = st.file_uploader("Upload Receptor (PDB)", type=["pdb"])
+    return report  # Will add L5–L8 next
+"""
 
-# ---------------------- Process ----------------------
+with open(layer_engine_path, "w") as f:
+    f.write(layer_engine_code)
 
-if receptor and smiles:
-    receptor_title, l1_hints, l2_hints, all_keywords = extract_receptor_keywords(receptor.read())
-    st.markdown(f"### 🧠 Receptor Title: `{receptor_title}`")
-    if all_keywords:
-        st.success("Receptor Functional Keywords:")
-        for hint in all_keywords:
-            st.markdown(f"- {hint}")
-
-    chembl_id, targets = fetch_chembl_targets(smiles)
-    if chembl_id:
-        st.info(f"🧪 Ligand ChEMBL ID: `{chembl_id}`")
-        inferred = infer_layers_from_targets(targets)
-
-        inferred["layer1"] += "\n" + "\n".join(l1_hints)
-        inferred["layer2"] += "\n" + "\n".join(l2_hints)
-
-        st.header("🔬 Auto-Filled INP Layers (L1–L6)")
-        for i in range(6):
-            st.markdown(f"### 🔹 Layer {i+1}")
-            st.code(inferred[f"layer{i+1}"] or "No data inferred.")
-    else:
-        st.error("No ChEMBL target match found for this SMILES.")
+layer_engine_path
